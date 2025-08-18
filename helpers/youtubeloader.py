@@ -1,4 +1,4 @@
-from youtube_transcript_api import YouTubeTranscriptApi, Transcript
+from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_core.documents import Document
 
 def load_youtube_transcript(youtube_url: str) -> list[Document]:
@@ -14,14 +14,8 @@ def load_youtube_transcript(youtube_url: str) -> list[Document]:
         if not video_id or len(video_id) != 11:
             raise ValueError(f"Invalid video ID extracted: {video_id}")
         
-        # Use the list_transcripts method to get a list of available transcripts
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-        
-        # Try to find a human-generated transcript first, then an auto-generated one
-        transcript: Transcript = transcript_list.find_transcript(['en'])
-        
-        # Fetch the actual transcript content
-        transcript_data = transcript.fetch()
+        # Get transcript directly using the correct API method
+        transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
         
         if not transcript_data:
             raise ValueError("No transcript data found for this video")
