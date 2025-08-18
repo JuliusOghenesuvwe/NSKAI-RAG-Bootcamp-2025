@@ -5,21 +5,16 @@ This is an interactive Q&A application that allows you to "chat" with any YouTub
 ## Features
 
 - **Interactive Q&A:** Ask questions about a YouTube video in natural language.
-- **Advanced Retrieval:** Uses a sophisticated retrieval pipeline with a reranker (**Cross-Encoder**) for highly accurate context finding.
 - **Fast Generation:** Powered by the incredibly fast **Groq** API with Llama 3 for near-instant answers.
-- **Open-Source Embeddings:** Utilizes a local, open-source model from Hugging Face for text embeddings.
 - **Simple UI:** Built with **Streamlit** for a clean and easy-to-use web interface.
 
 ## Tech Stack
 
-- **Framework:** LangChain
+- **Framework:** LangChain (for prompts and LLM)
 - **UI:** Streamlit
 - **LLM:** Groq (Llama 3 8B)
-- **Embedding Model:** Custom hash-based embeddings (Groq-only)
-- **Vector Store:** FAISS (Facebook AI Similarity Search)
-- **Data Loader:** `yt-dlp`
-
-> **Note:** Streamlit Cloud runs with an old SQLite version that's incompatible with ChromaDB. So, ChromaDB is replaced with FAISS for better performance and compatibility.
+- **Vector Store:** Simple custom retriever (placeholder)
+- **Data Loader:** `yt-dlp`, `youtube-transcript-api`
 
 ## Getting Started
 
@@ -57,12 +52,13 @@ pip install -r requirements.txt
 
 **Dependencies:**
 - `streamlit` - Web UI framework
-- `langchain` - RAG framework
+- `langchain` - RAG framework components
 - `langchain-groq` - Groq LLM integration
 - `langchain-community` - Community integrations
-- `faiss-cpu` - Facebook AI Similarity Search vector database
-- `yt-dlp` - YouTube transcript extraction
+- `yt-dlp` - YouTube video downloader
 - `python-dotenv` - Environment variable management
+- `chromadb` - Vector database (not currently used)
+- `youtube-transcript-api` - YouTube transcript extraction
 
 ### 4. Set Up Environment Variables
 
@@ -90,14 +86,16 @@ streamlit run app.py
 2. Click the **"Process Video"** button and wait for the processing to complete.
 3. Once processed, you can ask questions about the video in the main input field.
 
-## 🚀 Deploy to Streamlit Cloud (Free)
+## 🚀 Deploy
+
+### Streamlit Cloud (Free)
 
 To make your app accessible to others:
 
 1. **Visit** https://share.streamlit.io
 2. **Sign in** with GitHub
 3. **Click "New app"**
-4. **Select your repository:** `Oghenesuvwe-dev/NSKAI-RAG-Bootcamp-2025`
+4. **Select your repository**
 5. **Set main file:** `app.py`
 6. **Add secrets:** Click "Advanced settings" → "Secrets" → Add:
    ```
@@ -105,7 +103,9 @@ To make your app accessible to others:
    ```
 7. **Click "Deploy"**
 
-Your app will be live at: `https://your-app-name.streamlit.app`
+### Render
+
+This application can also be deployed on Render using the provided `render.yaml` and `Dockerfile`. You will need to set up a new "Web Service" on Render and connect it to your GitHub repository. Render will use the `render.yaml` file to configure the deployment. You will also need to add your `GROQ_API_KEY` as a secret in the Render dashboard.
 
 ## Project Structure
 
@@ -115,23 +115,25 @@ Your app will be live at: `https://your-app-name.streamlit.app`
 │   ├── __init__.py       # Makes 'helpers' a Python package
 │   ├── chain.py          # Creates the final RAG chain with the LLM
 │   ├── chunker.py        # Splits documents into smaller chunks
-│   ├── retriever.py      # Creates the retriever and reranker
-│   ├── vectorstore.py    # Creates the ChromaDB vector store
+│   ├── retriever.py      # Creates the retriever
+│   ├── vectorstore.py    # Creates the vector store
 │   └── youtubeloader.py  # Loads and cleans transcripts using yt-dlp
 ├── .env                  # Stores API keys (secret, not committed to git)
 ├── .env.example          # Example environment file
 ├── .gitignore            # Specifies files for git to ignore
 ├── app.py                # The main Streamlit application file
 ├── requirements.txt      # Project dependencies
+├── Dockerfile            # Dockerfile for deployment
+├── render.yaml           # Render deployment configuration
 └── README.md             # This file
 ```
 
 ## How It Works
 
-The application follows a standard RAG pipeline:
+The application follows a simplified RAG pipeline:
 
-1. **Ingestion:** The `youtubeloader` fetches the video transcript using `yt-dlp` and cleans it.
+1. **Ingestion:** The `youtubeloader` fetches the video transcript using `yt-dlp` and `youtube-transcript-api`.
 2. **Chunking:** The `chunker` splits the clean transcript into smaller, overlapping documents.
-3. **Indexing:** The `vectorstore` helper uses custom hash-based embeddings to create numerical vectors for each chunk and stores them in FAISS vector database.
-4. **Retrieval:** When a question is asked, the `retriever` finds the most relevant chunks using FAISS similarity search.
-5. **Generation:** The top-ranked chunks and the original question are passed to the Groq LLM within a structured prompt, which then generates the final, grounded answer.
+3. **Indexing:** The `vectorstore` helper creates a simple in-memory store for the document chunks.
+4. **Retrieval:** When a question is asked, the `retriever` returns the first few chunks of the transcript as context.
+5. **Generation:** The retrieved chunks and the original question are passed to the Groq LLM within a structured prompt, which then generates the final, grounded answer.

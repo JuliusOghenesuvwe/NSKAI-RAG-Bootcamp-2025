@@ -82,7 +82,7 @@ if st.session_state.chain:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    response = st.session_state.chain.invoke({"question": prompt})
+                    response = st.session_state.chain({"question": prompt})
                     answer = response.get("answer", "I couldn't generate an answer.")
                     st.markdown(answer)
                     st.session_state.messages.append({"role": "assistant", "content": answer})

@@ -34,21 +34,21 @@ def create_rag_chain(retriever):
     
     prompt = ChatPromptTemplate.from_template(template)
     
-    # Create the chain
-    chain = (
-        {
-            "context": retriever | _format_docs,
-            "question": RunnablePassthrough()
-        }
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
-    
-    # Wrap in a function that returns dict for compatibility
+    # Create simple chain function
     def rag_chain_wrapper(inputs):
         question = inputs.get("question", "")
-        answer = chain.invoke(question)
+        
+        # Get relevant documents
+        docs = retriever.get_relevant_documents(question)
+        context = _format_docs(docs)
+        
+        # Format prompt
+        formatted_prompt = template.format(context=context, question=question)
+        
+        # Get response from LLM
+        response = llm.invoke(formatted_prompt)
+        answer = response.content if hasattr(response, 'content') else str(response)
+        
         return {"answer": answer}
     
     return rag_chain_wrapper
