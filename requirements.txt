@@ -5,4 +5,4 @@ langchain-community
 yt-dlp
 python-dotenv
 chromadb
-youtube-transcript-api
+youtube-transcript-api==1.2.2

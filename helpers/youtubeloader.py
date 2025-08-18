@@ -1,5 +1,9 @@
 from youtube_transcript_api import YouTubeTranscriptApi
-from langchain_core.documents import Document
+
+class Document:
+    def __init__(self, page_content, metadata=None):
+        self.page_content = page_content
+        self.metadata = metadata or {}
 
 def load_youtube_transcript(youtube_url: str) -> list[Document]:
     """Loads a YouTube video transcript and returns it as a list of Langchain documents."""
@@ -15,12 +19,14 @@ def load_youtube_transcript(youtube_url: str) -> list[Document]:
             raise ValueError(f"Invalid video ID extracted: {video_id}")
         
         # Get transcript directly using the correct API method
-        transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
+        api = YouTubeTranscriptApi()
+        fetched = api.fetch(video_id)
+        transcript_data = fetched.snippets
         
         if not transcript_data:
             raise ValueError("No transcript data found for this video")
         
-        full_text = " ".join([d['text'] for d in transcript_data])
+        full_text = " ".join([snippet.text for snippet in transcript_data])
         
         if not full_text.strip():
             raise ValueError("Transcript is empty or contains no text")
